@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { INoteRepository } from '../domain/repositories/notes.repository'
 import { Note } from 'src/domain/entities/note.entity'
 import { UserId } from 'src/domain/value-objects/ids/user-id.vo'
@@ -6,7 +6,10 @@ import { NoteId } from 'src/domain/value-objects/ids/note-id.vo'
 
 @Injectable()
 export class NotesService {
-  constructor(private readonly noteRepository: INoteRepository) {}
+  constructor(
+    @Inject("INoteRepository")
+    private readonly noteRepository: INoteRepository
+  ) {}
 
   async createNote(userId: string, title: string, content: string): Promise<Note> {
     const note = Note.create(UserId.create(userId), title, content);

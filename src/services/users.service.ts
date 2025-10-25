@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { IUserRepository } from '../domain/repositories/users.repository'
 import { User } from '../domain/entities/user.entity'
 import { Email } from '../domain/value-objects/users/email.vo'
 import { Username } from '../domain/value-objects/users/username.vo'
 import { Name } from '../domain/value-objects/users/name.vo'
 import { UserId } from '../domain/value-objects/ids/user-id.vo'
+import { UserDto } from '../shared/dtos/users/user'
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @Inject("IUserRepository")
+    private readonly userRepository: IUserRepository
+  ) {}
 
   async createUser(
     email: string,
@@ -27,21 +31,25 @@ export class UsersService {
     return user;
   }
 
-  async getUserById(id: string): Promise<User> {
+  async getUsers(): Promise<UserDto[]> {
+    return await this.userRepository.findAll()
+  }
+
+  async getUserById(id: string): Promise<UserDto> {
     const user = await this.userRepository.findById(UserId.create(id));
     // Redo for Domain Exceptions
     if (!user) throw new NotFoundException("User not found");
     return user;
   }
 
-  async getUserByEmail(email: string): Promise<User> {
+  async getUserByEmail(email: string): Promise<UserDto> {
     const userEntity = await this.userRepository.findByEmail(new Email(email));
     if (!userEntity) throw new NotFoundException("User not found");
     return userEntity;
   }
 
-  async getUserByUsername(username: string): Promise<User> {
-    const userEntity = await this.userRepository.findByUsername(username);
+  async getUserByUsername(username: string): Promise<UserDto> {
+    const userEntity = await this.userRepository.findByUsername(new Username(username));
     if (!userEntity) throw new NotFoundException("User not found");
     return userEntity;
   }
@@ -50,8 +58,8 @@ export class UsersService {
     await this.userRepository.save(user);
   }
 
-  async deleteUser(user: User): Promise<void> {
-    await this.userRepository.delete(user);
+  async deleteUser(userId: UserId): Promise<void> {
+    await this.userRepository.delete(userId);
   }
 }
 

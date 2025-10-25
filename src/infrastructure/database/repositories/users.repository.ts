@@ -1,86 +1,86 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
 import { eq } from 'drizzle-orm'
 import { users } from "../schema";
 import { IUserRepository } from 'src/domain/repositories/users.repository'
 import { User } from 'src/domain/entities/user.entity'
-import { UserId } from 'src/domain/value-objects/ids/user-id.vo'
-import { Email } from 'src/domain/value-objects/users/email.vo'
-import { Username } from 'src/domain/value-objects/users/username.vo'
-import { Name } from 'src/domain/value-objects/users/name.vo'
+import { UserDto } from 'src/shared/dtos/users/user'
+import { UserId } from '../../../domain/value-objects/ids/user-id.vo'
+import { Email } from '../../../domain/value-objects/users/email.vo'
+import { Username } from '../../../domain/value-objects/users/username.vo'
+import { DrizzleAsyncProvider } from '../provider'
+import { NodePgDatabase } from 'drizzle-orm/node-postgres'
+import * as schema from '../schema'
 
 @Injectable()
 export class UserRepository implements IUserRepository {
-  constructor(@Inject("DRIZZLE") private db: any) {}
+  constructor(
+    @Inject(DrizzleAsyncProvider)
+    private db: NodePgDatabase<typeof schema>,
+  ) { }
 
   async save(user: User): Promise<void> {
-    const existing = await this.findById(user.id);
-    if (existing) {
-      // Update existing user
-      await this.db
-        .update(users)
-        .set({
-          email: user.email.getValue(),
-          username: user.username.getValue(),
-          name: user.name.getValue(),
-          passwordHash: user.passwordHash,
-        })
-        .where(eq(users.id, user.id.getValue()));
-    } else {
-      // Insert new user
-      await this.db.insert(users).values({
-        id: user.id.getValue(),
-        email: user.email.getValue(),
-        username: user.username.getValue(),
-        name: user.name.getValue(),
-        passwordHash: user.passwordHash,
-        createdAt: new Date(),
-      });
+    await this.db.insert(users).values({
+      id: user.id.toString(),
+      email: user.email.toString(),
+      username: user.username.getValue().toString(),
+      name: user.name.getValue().toString(),
+      passwordHash: user.passwordHash,
+    });
+  }
+
+  async findById(id: UserId): Promise<UserDto | null> {
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.id, id.toString()));
+
+    if (!user) {
+      return null;
     }
+
+    return { email: user.email, name: user.name, username: user.username } as UserDto;
   }
 
-  async findById(id: UserId): Promise<User | null> {
-    const result = await this.db.query.users.findFirst({
-      where: eq(users.id, id.getValue()),
-    });
-    if (!result) return null;
+  async findByEmail(email: Email): Promise<UserDto | null> {
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.getValue().toString()));
 
-    return User.create(
-      new Email(result.email),
-      result.passwordHash,
-      new Username(result.username),
-      new Name(result.name),
-    );
+    if (!user) {
+      return null;
+    }
+
+    return { email: user.email, name: user.name, username: user.username } as UserDto;
   }
 
-  async findByEmail(email: Email): Promise<User | null> {
-    const result = await this.db.query.users.findFirst({
-      where: eq(users.email, email.getValue()),
-    });
-    if (!result) return null;
+  async findByUsername(username: Username): Promise<UserDto | null> {
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.username, username.getValue().toString()));
 
-    return User.create(
-      new Email(result.email),
-      result.passwordHash,
-      new Username(result.username),
-      new Name(result.name),
-    );
+    if (!user) {
+      return null;
+    }
+
+    return { email: user.email, name: user.name, username: user.username } as UserDto;
   }
 
-  async findByUsername(username: string): Promise<User | null> {
-    const result = await this.db.query.users.findFirst({
-      where: eq(users.username, username),
-    });
-    if (!result) return null;
+  async findAll(): Promise<UserDto[]> {
+    const dbUsers = await this.db.select().from(users);
 
-    return User.create(
-      new Email(result.email),
-      result.passwordHash,
-      new Username(result.username),
-      new Name(result.name),
-    );
+    return dbUsers.map((dbUser) => ({ email: dbUser.email, name: dbUser.name, username: dbUser.username}));
   }
 
-  async delete(user: User): Promise<void> {
-    await this.db.delete(users).where(eq(users.id, user.id.getValue()));
+  async update(id: string, data: Partial<User>): Promise<UserDto> {
+    throw new NotImplementedException();
+  }
+
+  /**
+   * Delete a user by id
+   */
+  async delete(id: UserId): Promise<void> {
+    throw new NotImplementedException();
   }
 }
