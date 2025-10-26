@@ -26,6 +26,7 @@ export class UserRepository implements IUserRepository {
       username: user.username.getValue().toString(),
       name: user.name.getValue().toString(),
       passwordHash: user.passwordHash,
+      role: user.role.toString(),
     });
   }
 
@@ -83,9 +84,6 @@ export class UserRepository implements IUserRepository {
     throw new NotImplementedException();
   }
 
-  /**
-   * Delete a user by id
-   */
   async delete(id: UserId): Promise<void> {
     throw new NotImplementedException();
   }

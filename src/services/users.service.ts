@@ -6,6 +6,7 @@ import { Username } from '../domain/value-objects/users/username.vo'
 import { Name } from '../domain/value-objects/users/name.vo'
 import { UserId } from '../domain/value-objects/ids/user-id.vo'
 import { UserDto } from '../shared/dtos/users/user'
+import { Role } from '../domain/value-objects/roles/role.vo'
 
 @Injectable()
 export class UsersService {
@@ -19,12 +20,14 @@ export class UsersService {
     passwordHash: string,
     username: string,
     name: string,
+    role: Role
   ): Promise<User> {
     const user = User.create(
       new Email(email),
       passwordHash,
       new Username(username),
       new Name(name),
+      role
     );
 
     await this.userRepository.save(user);

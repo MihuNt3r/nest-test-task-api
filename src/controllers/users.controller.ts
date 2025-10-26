@@ -14,6 +14,7 @@ import { User } from 'src/domain/entities/user.entity'
 import { UsersService } from 'src/services/users.service'
 import { UserDto } from '../shared/dtos/users/user'
 import { UserId } from '../domain/value-objects/ids/user-id.vo'
+import { parseRole } from '../shared/helpers/helpers'
 
 @Controller('users')
 export class UsersController {
@@ -21,7 +22,9 @@ export class UsersController {
 
   @Post()
   async createUser(@Body() dto: CreateUserDto): Promise<User> {
-    return this.usersService.createUser(dto.email, dto.passwordHash, dto.username, dto.name);
+    const role = parseRole(dto.role);
+
+    return this.usersService.createUser(dto.email, dto.passwordHash, dto.username, dto.name, role);
   }
 
   @Get('')

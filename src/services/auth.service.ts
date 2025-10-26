@@ -11,6 +11,7 @@ import { Email } from '../domain/value-objects/users/email.vo';
 import { Username } from '../domain/value-objects/users/username.vo';
 import { Name } from '../domain/value-objects/users/name.vo';
 import { User } from '../domain/entities/user.entity';
+import { Role } from '../domain/value-objects/roles/role.vo'
 
 @Injectable()
 export class AuthService {
@@ -25,6 +26,7 @@ export class AuthService {
     username: string,
     name: string,
     password: string,
+    role: Role
   ): Promise<void> {
     const existing = await this.userRepository.findByEmail(new Email(email));
     if (existing) {
@@ -38,6 +40,7 @@ export class AuthService {
       passwordHash,
       new Username(username),
       new Name(name),
+      role
     );
 
     await this.userRepository.save(user);
