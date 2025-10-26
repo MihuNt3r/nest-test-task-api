@@ -1,3 +1,3 @@
-import { CreateUserDto } from './create-user'
+import { UserWithPasswordDto } from './user-with-password'
 
-export type UserDto = Omit<CreateUserDto, 'passwordHash'>
+export type UserDto = Omit<UserWithPasswordDto, 'passwordHash'>

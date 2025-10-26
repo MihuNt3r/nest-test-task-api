@@ -10,6 +10,7 @@ import { Username } from '../../../domain/value-objects/users/username.vo'
 import { DrizzleAsyncProvider } from '../provider'
 import { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import * as schema from '../schema'
+import { UserWithPasswordDto } from '../../../shared/dtos/users/user-with-password'
 
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -21,7 +22,7 @@ export class UserRepository implements IUserRepository {
   async save(user: User): Promise<void> {
     await this.db.insert(users).values({
       id: user.id.toString(),
-      email: user.email.toString(),
+      email: user.email.getValue().toString(),
       username: user.username.getValue().toString(),
       name: user.name.getValue().toString(),
       passwordHash: user.passwordHash,
@@ -41,7 +42,7 @@ export class UserRepository implements IUserRepository {
     return { email: user.email, name: user.name, username: user.username } as UserDto;
   }
 
-  async findByEmail(email: Email): Promise<UserDto | null> {
+  async findByEmail(email: Email): Promise<UserWithPasswordDto | null> {
     const [user] = await this.db
       .select()
       .from(users)
@@ -51,7 +52,12 @@ export class UserRepository implements IUserRepository {
       return null;
     }
 
-    return { email: user.email, name: user.name, username: user.username } as UserDto;
+    return {
+      email: user.email,
+      name: user.name,
+      username: user.username,
+      passwordHash: user.passwordHash
+    } as UserWithPasswordDto;
   }
 
   async findByUsername(username: Username): Promise<UserDto | null> {
